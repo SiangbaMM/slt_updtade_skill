@@ -12,5 +12,8 @@ streamlit.title("🍌🥭 With those meals, i'll of course build these fruits sm
 # reading our CSV file from the S3 bucket and pull the data into a dataframe we'll call my_fruit_list. 
 my_fruit_list = pandas.read_csv("https://uni-lab-files.s3.us-west-2.amazonaws.com/dabw/fruit_macros.txt")
 
-# displaying the pandas dataframe on the streamlit page 
+# Let's put a pick list here so they can pick the fruit they want to include 
+streamlit.multiselect("Pick some fruits:", list(my_fruit_list.index))
+
+# Display the table on the page. 
 streamlit.dataframe(my_fruit_list)

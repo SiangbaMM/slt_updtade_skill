@@ -47,10 +47,14 @@ streamlit.text(my_data_row)
 my_cnx = snowflake.connector.connect(**streamlit.secrets["snowflake"])
 my_cur = my_cnx.cursor()
 my_cur.execute("SELECT * FROM FRUIT_LOAD_LIST")
+
+# Fetch one record
 my_data_row = my_cur.fetchone()
-streamlit.text("The first fruit in the load list is")
+streamlit.header("Retrieval of one of the fruits in the load list")
 streamlit.text(my_data_row)
+
+#Fetch all records
 my_data_row = my_cur.fetchall()
-streamlit.text("The fruit load list contains")
+streamlit.header("The fruit load list contains")
 streamlit.text(my_data_row)
 

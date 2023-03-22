@@ -67,7 +67,7 @@ if streamlit.button("Get trial account metadata"):
   streamlit.text(my_data_row)
 
 # Don't run anything past here while we troubleshoot 
-streamlit.stop()
+#streamlit.stop()
 
 # Let's the fruit_load_list table 
 streamlit.header("The fruit load list contains")

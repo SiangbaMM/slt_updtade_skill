@@ -32,8 +32,8 @@ def add_fruit_into_fruit_list(my_cnx, fruit_to_add):
       query = "INSERT INTO FRUIT_LOAD_LIST(FRUIT_NAME) VALUES('" + fruit_to_add + "')"
       my_cur.execute(query)
       streamlit.write('Thanks for adding ', fruit_to_add)
-  except as e:
-    streamlit.error(e)
+  except:
+    streamlit.error("Qurey issue")
 
 # reading our CSV file from the S3 bucket and pull the data into a dataframe we'll call my_fruit_list. 
 my_fruit_list = pandas.read_csv("https://uni-lab-files.s3.us-west-2.amazonaws.com/dabw/fruit_macros.txt")

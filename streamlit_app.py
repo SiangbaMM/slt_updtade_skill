@@ -16,17 +16,20 @@ def get_fruityvice_data(this_fruit_choice):
 def get_snowflake_connection():
   return snowflake.connector.connect(**streamlit.secrets["snowflake"])
 
-def get_fruit_load_list(my_cnx):
+def get_fruit_load_list():
+  my_cnx = get_snowflake_connection()
   with my_cnx.cursor() as my_cur:
     my_cur.execute("SELECT * FROM FRUIT_LOAD_LIST")
     return my_cur.fetchall()
 
-def get_trial_account_metadata(my_cnx):
+def get_trial_account_metadata():
+  my_cnx = get_snowflake_connection()
   with my_cnx.cursor() as my_cur:
     my_cur.execute("SELECT CURRENT_USER(), CURRENT_ACCOUNT(), CURRENT_REGION()")
     return my_cur.fetchone()
  
-def add_fruit_into_fruit_list(my_cnx, fruit_to_add):
+def add_fruit_into_fruit_list(fruit_to_add):
+  my_cnx = get_snowflake_connection()
   try:
     with my_cnx.cursor() as my_cur:
       query = "INSERT INTO FRUIT_LOAD_LIST(FRUIT_NAME) VALUES('" + fruit_to_add + "')"
@@ -63,7 +66,7 @@ except URLError as e:
 streamlit.header("Let's Query Our Trial Account Metadata")
 my_cnx =  get_snowflake_connection()
 if streamlit.button("Get trial account metadata"):
-  my_data_row = get_trial_account_metadata(my_cnx)
+  my_data_row = get_trial_account_metadata()
   streamlit.text(my_data_row)
 
 # Don't run anything past here while we troubleshoot 
@@ -71,14 +74,14 @@ if streamlit.button("Get trial account metadata"):
 
 # Let's the fruit_load_list table 
 streamlit.header("The fruit load list contains")
-if streamlit.button("Get trial account metadata"):
-  my_data_row = get_fruit_load_list(my_cnx)
+if streamlit.button("Get fruit load list"):
+  my_data_row = get_fruit_load_list()
   streamlit.dataframe(my_data_row)
 
 # Adding a fruit into the list
 streamlit.header("What fruit would you like to add ?")
 fruit_to_add = streamlit.text_input('Please enter the fruit name :','')
 if streamlit.button("Add the fruit"):
-  my_data_row = add_fruit_into_fruit_list(my_cnx, fruit_to_add)
+  my_data_row = add_fruit_into_fruit_list(fruit_to_add)
   streamlit.text(my_data_row)
 

@@ -51,10 +51,10 @@ my_cur.execute("SELECT * FROM FRUIT_LOAD_LIST")
 # Fetch one record
 my_data_row = my_cur.fetchone()
 streamlit.header("Retrieval of one of the fruits in the load list")
-streamlit.text(my_data_row)
+streamlit.dataframe(my_data_row)
 
 #Fetch all records
 my_data_row = my_cur.fetchall()
 streamlit.header("The fruit load list contains")
-streamlit.text(my_data_row)
+streamlit.dataframe(my_data_row)
 

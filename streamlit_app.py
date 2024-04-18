@@ -1,87 +1,47 @@
-## Import list
-import streamlit
-import pandas
-import requests
-import snowflake.connector
-from urllib.error import URLError
+# Import python packages
+import streamlit as st
+from snowflake.snowpark.context import get_active_session
+from snowflake.snowpark.functions import col
 
-## Function
-def get_fruityvice_data(this_fruit_choice):
-  streamlit.write('The user entered ', fruit_choice)
-  fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + fruit_choice)
-  # Normalized json file
-  fruityvice_normalized = pandas.json_normalize(fruityvice_response.json())  
-  return fruityvice_normalized
+# Write directly to the app
+st.title(":cup_with_straw: Customize tour Smoothie :cup_with_straw:")
+st.write(
+    """Choose the fruits you want in your customize Smoothie!"""
+)
 
-def get_snowflake_connection():
-  return snowflake.connector.connect(**streamlit.secrets["snowflake"])
+name_on_order = st.text_input('Name on Smoothie :')
+st.write('The name on your Smoothie will be : ', name_on_order)
 
-def get_fruit_load_list():
-  my_cnx = get_snowflake_connection()
-  with my_cnx.cursor() as my_cur:
-    my_cur.execute("SELECT * FROM FRUIT_LOAD_LIST")
-    return my_cur.fetchall()
+session = get_active_session()
+my_dataframe = session.table("smoothies.public.fruit_options").select(col('FRUIT_NAME'))
+#st.dataframe(data=my_dataframe, use_container_width=True)
 
-def get_trial_account_metadata():
-  my_cnx = get_snowflake_connection()
-  with my_cnx.cursor() as my_cur:
-    my_cur.execute("SELECT CURRENT_USER(), CURRENT_ACCOUNT(), CURRENT_REGION()")
-    return my_cur.fetchone()
- 
-def add_fruit_into_fruit_list(fruit_to_add):
-  my_cnx = get_snowflake_connection()
-  try:
-    with my_cnx.cursor() as my_cur:
-      query = "INSERT INTO FRUIT_LOAD_LIST(FRUIT_NAME) VALUES('" + fruit_to_add + "')"
-      my_cur.execute(query)
-      return 'Thanks for adding ' + fruit_to_add
-  except:
-    streamlit.error("Qurey issue")
+ingredients_list = st.multiselect(
+    'Choose up to 5 ingredients',
+    my_dataframe, max_selections = 5
+)
 
-streamlit.title("🍌🥭 With those meals, i'll of course build these fruits smoothies below 🥝🍇")
-# reading our CSV file from the S3 bucket and pull the data into a dataframe we'll call my_fruit_list. 
-my_fruit_list = pandas.read_csv("https://uni-lab-files.s3.us-west-2.amazonaws.com/dabw/fruit_macros.txt")
-# setting dataframe index
-my_fruit_list = my_fruit_list.set_index('Fruit')
-# Let's put a pick list here so they can pick the fruit they want to include 
-fruits_selected = streamlit.multiselect("Pick some fruits:", list(my_fruit_list.index), ['Avocado', 'Strawberries'])
-fruits_to_show = my_fruit_list.loc[fruits_selected]
+if ingredients_list :
+    #st.write(ingredients_list)
+    #st.text(ingredients_list)
 
-# Display the table on the page. 
-streamlit.dataframe(fruits_to_show)
+    ingredients_string = ''
 
-# Calling the Fruityvice API from Our Streamlit App!
-streamlit.header("🥣 🥗 🍞 Fruityvice Fruit Advice 🐔 🥑")
-try :
-  fruit_choice = streamlit.text_input('What fruit would you like information about?','Kiwi')
-  if not fruit_choice:
-    streamlit.error("Please select a fruit to get information.")
-  else:
-    back_from_function = get_fruityvice_data(fruit_choice)
-    streamlit.dataframe(back_from_function)
-except URLError as e:
-  streamlit.error()
+    for fruits in ingredients_list :
+        ingredients_string += fruits + " "
 
-# Let's Query Our Trial Account Metadata 
-streamlit.header("Let's Query Our Trial Account Metadata")
-my_cnx =  get_snowflake_connection()
-if streamlit.button("Get trial account metadata"):
-  my_data_row = get_trial_account_metadata()
-  streamlit.text(my_data_row)
+    #st.write(ingredients_string)
 
-# Don't run anything past here while we troubleshoot 
-#streamlit.stop()
+    my_insert_stmt = """ insert into smoothies.public.orders(ingredients, name_on_order)
+            values ('""" + ingredients_string + """','""" + name_on_order + """')"""
 
-# Let's the fruit_load_list table 
-streamlit.header("The fruit load list contains")
-if streamlit.button("Get fruit load list"):
-  my_data_row = get_fruit_load_list()
-  streamlit.dataframe(my_data_row)
+    #st.write(my_insert_stmt)
+    #st.stop()
 
-# Adding a fruit into the list
-streamlit.header("What fruit would you like to add ?")
-fruit_to_add = streamlit.text_input('Please enter the fruit name :','')
-if streamlit.button("Add the fruit"):
-  my_data_row = add_fruit_into_fruit_list(fruit_to_add)
-  streamlit.text(my_data_row)
+    time_to_insert = st.button('Submit Order')
+    
+    if time_to_insert:
+        session.sql(my_insert_stmt).collect()
+        st.success('Your Smoothie is ordered!', icon="✅")
+
 
